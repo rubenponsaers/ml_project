@@ -3,8 +3,13 @@ import pyspiel
 from open_spiel.python import rl_environment
 from open_spiel.python import rl_tools
 from open_spiel.python.algorithms import tabular_qlearner
+from open_spiel.python.egt import dynamics, visualization, utils
 
 import matplotlib.pyplot as plt
+#from matplotlib import Figure
+#from matplotlib.figure import Figure
+from matplotlib.quiver import Quiver
+from matplotlib.streamplot import StreamplotSet
 
 def train(game):
     #initialization of the environment 
@@ -59,3 +64,27 @@ def play_game(game, agent1, agent2):
         time_step = env.step([agent1_output.action, agent2_output.action])
 
         print(time_step.rewards)
+
+def plot_dynamics(game, singlePopulation = False):
+    fig = plt.figure()
+    payoff_tensor = utils.game_payoffs_array(game)
+
+    if singlePopulation:
+        dyn = dynamics.SinglePopulationDynamics(payoff_tensor, dynamics.replicator)
+        ax1 = fig.add_subplot(121, projection='3x3')
+        ax1.set(labels=["Rock", "Paper", "Scissors"])
+        ax1.quiver(dyn)
+        ax2 = fig.add_subplot(122, projection='3x3')
+        ax2.set(labels=["Rock", "Paper", "Scissors"])
+        ax2.streamplot(dyn)
+        plt.savefig('biased_rps.png')
+    else:
+        dyn = dynamics.MultiPopulationDynamics(payoff_tensor, dynamics.replicator)
+        ax1 = fig.add_subplot(121, projection='2x2')
+        ax1.quiver(dyn)
+        ax2 = fig.add_subplot(122, projection='2x2')
+        ax2.streamplot(dyn)
+    
+    plt.show()
+
+

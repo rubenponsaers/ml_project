@@ -1,1 +1,4 @@
-open_spiel/
+/code/__pycache__
+.DS_Store
+*.png
+/open_spiel
