@@ -3,8 +3,11 @@ import pyspiel
 from open_spiel.python import rl_environment
 from open_spiel.python import rl_tools
 from open_spiel.python.algorithms import tabular_qlearner
+from open_spiel.python.egt.utils import game_payoffs_array
+from open_spiel.python.egt import dynamics
 
 import matplotlib.pyplot as plt
+from matplotlib.figure import Figure
 
 def train(game):
     #initialization of the environment 
@@ -59,3 +62,19 @@ def play_game(game, agent1, agent2):
         time_step = env.step([agent1_output.action, agent2_output.action])
 
         print(time_step.rewards)
+
+def plot_dynamics(game):
+    payoff_matrix = game_payoffs_array(game)
+    dyn = dynamics.MultiPopulationDynamics(payoff_matrix, dynamics.replicator)
+    fig = Figure(figsize=(10,10))
+    ax = fig.add_subplot(111, projection="2x2")
+    ax.set(xlabel="Probability of Agent 0 playing Silence", ylabel="Probability of Agent 1 playing Silence")
+    res = ax.quiver(dyn)
+    fig.savefig("directional_evo_dynamics_pd.png")
+
+    # Draw a trajectory plot
+    fig = Figure(figsize=(10, 10))
+    ax = fig.add_subplot(111, projection="2x2")
+    ax.set(xlabel="Probability of Agent 0 playing Silence", ylabel="Probability of Agent 1 playing Silence")
+    res = ax.streamplot(dyn)
+    fig.savefig("stream_evo_dynamics_pd.png")
