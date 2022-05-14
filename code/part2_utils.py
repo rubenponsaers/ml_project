@@ -6,6 +6,10 @@ from open_spiel.python.algorithms import tabular_qlearner
 from open_spiel.python.egt import dynamics, visualization, utils
 
 import matplotlib.pyplot as plt
+#from matplotlib import Figure
+#from matplotlib.figure import Figure
+from matplotlib.quiver import Quiver
+from matplotlib.streamplot import StreamplotSet
 
 def train(game):
     #initialization of the environment 
@@ -62,19 +66,25 @@ def play_game(game, agent1, agent2):
         print(time_step.rewards)
 
 def plot_dynamics(game, singlePopulation = False):
-    # Figure setup
     fig = plt.figure()
+    payoff_tensor = utils.game_payoffs_array(game)
 
-    # Arrow plot setup
-    payoffs  = utils.game_payoffs_array(game)
-    dyn = dynamics.boltzmannq  # Two alternatives: d.qpg and d.boltzmannq
     if singlePopulation:
-        ax = fig.add_subplot(111, projection='3x3')
-        popdyn   = dynamics.SinglePopulationDynamics(payoffs, dyn)
+        dyn = dynamics.SinglePopulationDynamics(payoff_tensor, dynamics.replicator)
+        ax1 = fig.add_subplot(121, projection='3x3')
+        ax1.set(labels=["Rock", "Paper", "Scissors"])
+        ax1.quiver(dyn)
+        ax2 = fig.add_subplot(122, projection='3x3')
+        ax2.set(labels=["Rock", "Paper", "Scissors"])
+        ax2.streamplot(dyn)
+        plt.savefig('biased_rps.png')
     else:
-        ax = fig.add_subplot(111, projection='2x2')
-        popdyn   = dynamics.MultiPopulationDynamics(payoffs, dyn)
-    ax.quiver(popdyn)
-
+        dyn = dynamics.MultiPopulationDynamics(payoff_tensor, dynamics.replicator)
+        ax1 = fig.add_subplot(121, projection='2x2')
+        ax1.quiver(dyn)
+        ax2 = fig.add_subplot(122, projection='2x2')
+        ax2.streamplot(dyn)
+    
     plt.show()
+
 
