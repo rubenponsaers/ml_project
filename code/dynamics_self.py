@@ -41,7 +41,7 @@ def replicator(state, fitness):
   return state * (fitness - avg_fitness)
 
 
-def boltzmannq_self(state, fitness, payoff_matrix, temperature=1.5, alpha=0.01, kappa=5):
+def boltzmannq_self(state, fitness, other_state, temperature=0.01, alpha=0.1, kappa=5):
   """Selection-mutation dynamics modeling Q-learning with Boltzmann exploration.
 
   For more details, see equation (10) page 15 in
@@ -55,9 +55,7 @@ def boltzmannq_self(state, fitness, payoff_matrix, temperature=1.5, alpha=0.01, 
   Returns:
     Time derivative of the population state.
   """
-
-  
-  u = _boltzmann_utility_vector(state, payoff_matrix, kappa)
+  u = _boltzmann_utility_vector(other_state, fitness, kappa)
   exploitation = (1. / temperature) * replicator(state, u)
   #exploitation = np.divide(state, temperature)*(u - state.dot(u))
   exploration = (np.log(state) - state.dot(np.log(state).transpose()))
@@ -193,9 +191,9 @@ class MultiPopulationDynamics(object):
       # move i-th population to front
       fitness = np.moveaxis(self.payoff_tensor[i], i, 0)
       # marginalize out all other populations
-      for i_ in set(range(n)) - {i}:
-        fitness = np.tensordot(states[i_], fitness, axes=[0, 1])
-      dstates[i] = self.dynamics[i](states[i], fitness, self.payoff_tensor[i_])
+      #for i_ in set(range(n)) - {i}:
+        #fitness = np.tensordot(states[i_], fitness, axes=[0, 1])
+      dstates[i] = self.dynamics[i](states[i], fitness, states[1-i])
 
     return np.concatenate(dstates)
 
