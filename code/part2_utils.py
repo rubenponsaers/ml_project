@@ -73,39 +73,39 @@ def play_game(game, agent1, agent2):
         print(time_step.rewards)
 
 def plot_dynamics_regular(game, actions, singlePopulation = False):
-    plot_dynamics(game, actions, dynamics.replicator, singlePopulation)
+    fig = plt.figure(figsize=[25, 10])
+    payoff_tensor = utils.game_payoffs_array(game)
+    dyn = dynamics.replicator
 
-def own_leniet_boltzmann_dyn(state, fitness, temperature=1.5, alpha=0.01):
-    #exploitation = np.divide(1., temperature) * dynamics.replicator(state, fitness)
-
-    state = np.array(state)
-    n = 2 # number of players
-    ks = (len(state), len(state))  # number of strategies for each player
-    states = np.split(state, np.cumsum(ks)[:-1]) # Split state into states
-    print(states)
-    u = boltzmann_utility_vector(state, fitness)
-    exploitation = np.divide(state, temperature)*(u - state.dot(u))
-    exploration = state*(np.log(state)-np.sum(state*np.log(state)))
-    res = alpha * (exploitation-exploration)
-    return res
- 
-
-def boltzmann_utility_vector(state, fitness, kappa=5):
-    print(fitness)
-    print(state)
-    u = []
-    for i in enumerate(state):
-        u_i = 0
-        for j, y_j in enumerate(state):
-            a_ij = fitness
-    return np.array()
+    if singlePopulation:
+        labels = ["Probability of choosing " + action for action in actions]
+        dyn = dynamics.SinglePopulationDynamics(payoff_tensor, dyn)
+        ax1 = fig.add_subplot(121, projection='3x3')
+        ax1.quiver(dyn)
+        ax1.set_labels(labels)
+        ax2 = fig.add_subplot(122, projection='3x3')
+        ax2.streamplot(dyn, dt=0.2)
+        ax2.set_labels(labels)
+    else:
+        dyn = dynamics.MultiPopulationDynamics(payoff_tensor, dyn)
+        ax1 = fig.add_subplot(121, projection='2x2')
+        ax1.quiver(dyn)
+        ax1.set( 
+            xlabel="Player1, probability of choosing " + actions[0],
+            ylabel="Player2, probability of choosing " + actions[0]
+            )
+        ax2 = fig.add_subplot(122, projection='2x2')
+        ax2.streamplot(dyn)
+        ax2.set( 
+            xlabel="Player1, probability of choosing " + actions[0],
+            ylabel="Player2, probability of choosing " + actions[0]
+            )
+    plt.savefig(str(game)[:-2]+'.jpg')
+    plt.show()
     
 
 def plot_dynamics_boltzmann(game, actions, alpha = 0.01, temperature = 1.5, singlePopulation = False):
-    plot_dynamics(game, actions, dynamics_self.boltzmannq_self, singlePopulation)
-
-
-def plot_dynamics(game, actions, dyn, singlePopulation = False):
+    dyn = dynamics_self.boltzmannq_self
     fig = plt.figure(figsize=[25, 10])
     payoff_tensor = utils.game_payoffs_array(game)
 
@@ -119,7 +119,7 @@ def plot_dynamics(game, actions, dyn, singlePopulation = False):
         ax2.streamplot(dyn, dt=0.2)
         ax2.set_labels(labels)
     else:
-        dyn = dynamics.MultiPopulationDynamics(payoff_tensor, dyn)
+        dyn = dynamics_self.MultiPopulationDynamics(payoff_tensor, dyn)
         ax1 = fig.add_subplot(121, projection='2x2')
         ax1.quiver(dyn)
         ax1.set( 
