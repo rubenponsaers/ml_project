@@ -3,11 +3,9 @@ import pyspiel
 from open_spiel.python import rl_environment
 from open_spiel.python import rl_tools
 from open_spiel.python.algorithms import tabular_qlearner
-from open_spiel.python.egt.utils import game_payoffs_array
-from open_spiel.python.egt import dynamics
+from open_spiel.python.egt import dynamics, visualization, utils
 
 import matplotlib.pyplot as plt
-from matplotlib.figure import Figure
 
 def train(game):
     #initialization of the environment 
@@ -63,18 +61,20 @@ def play_game(game, agent1, agent2):
 
         print(time_step.rewards)
 
-def plot_dynamics(game):
-    payoff_matrix = game_payoffs_array(game)
-    dyn = dynamics.MultiPopulationDynamics(payoff_matrix, dynamics.replicator)
-    fig = Figure(figsize=(10,10))
-    ax = fig.add_subplot(111, projection="2x2")
-    ax.set(xlabel="Probability of Agent 0 playing Silence", ylabel="Probability of Agent 1 playing Silence")
-    res = ax.quiver(dyn)
-    fig.savefig("directional_evo_dynamics_pd.png")
+def plot_dynamics(game, singlePopulation = False):
+    # Figure setup
+    fig = plt.figure()
 
-    # Draw a trajectory plot
-    fig = Figure(figsize=(10, 10))
-    ax = fig.add_subplot(111, projection="2x2")
-    ax.set(xlabel="Probability of Agent 0 playing Silence", ylabel="Probability of Agent 1 playing Silence")
-    res = ax.streamplot(dyn)
-    fig.savefig("stream_evo_dynamics_pd.png")
+    # Arrow plot setup
+    payoffs  = utils.game_payoffs_array(game)
+    dyn = dynamics.boltzmannq  # Two alternatives: d.qpg and d.boltzmannq
+    if singlePopulation:
+        ax = fig.add_subplot(111, projection='3x3')
+        popdyn   = dynamics.SinglePopulationDynamics(payoffs, dyn)
+    else:
+        ax = fig.add_subplot(111, projection='2x2')
+        popdyn   = dynamics.MultiPopulationDynamics(payoffs, dyn)
+    ax.quiver(popdyn)
+
+    plt.show()
+
