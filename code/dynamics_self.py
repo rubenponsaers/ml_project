@@ -41,7 +41,7 @@ def replicator(state, fitness):
   return state * (fitness - avg_fitness)
 
 
-def boltzmannq_self(state, fitness, other_state, temperature=0.01, alpha=0.1, kappa=5):
+def boltzmannq_self(state, fitness, other_state, temperature=0.72877, alpha=0.1, kappa=5):
   """Selection-mutation dynamics modeling Q-learning with Boltzmann exploration.
 
   For more details, see equation (10) page 15 in

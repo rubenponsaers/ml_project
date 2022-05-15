@@ -104,8 +104,7 @@ def plot_dynamics_regular(game, actions, singlePopulation = False):
     plt.show()
     
 
-def plot_dynamics_boltzmann(game, actions, alpha = 0.01, temperature = 1.5, singlePopulation = False):
-    dyn = dynamics_self.boltzmannq_self
+def plot_dynamics(game, actions, alpha = 0.01, temperature = 1.5, singlePopulation = False):
     fig = plt.figure(figsize=[25, 10])
     payoff_tensor = utils.game_payoffs_array(game)
 
@@ -119,21 +118,27 @@ def plot_dynamics_boltzmann(game, actions, alpha = 0.01, temperature = 1.5, sing
         ax2.streamplot(dyn, dt=0.2)
         ax2.set_labels(labels)
     else:
-        dyn = dynamics_self.MultiPopulationDynamics(payoff_tensor, dyn)
+        boltzmann_dyn = dynamics_self.MultiPopulationDynamics(payoff_tensor, dynamics_self.boltzmannq_self)
         ax1 = fig.add_subplot(121, projection='2x2')
-        ax1.quiver(dyn)
+        ax1.quiver(boltzmann_dyn)
+        ax1.streamplot(boltzmann_dyn)
         ax1.set( 
             xlabel="Player1, probability of choosing " + actions[0],
-            ylabel="Player2, probability of choosing " + actions[0]
+            ylabel="Player2, probability of choosing " + actions[0],
+            
             )
+
+        replicator_dyn = dynamics.MultiPopulationDynamics(payoff_tensor, dynamics.replicator)
         ax2 = fig.add_subplot(122, projection='2x2')
-        ax2.streamplot(dyn)
+        ax2.quiver(replicator_dyn)
+        ax2.streamplot(replicator_dyn)
         ax2.set( 
             xlabel="Player1, probability of choosing " + actions[0],
             ylabel="Player2, probability of choosing " + actions[0]
             )
     plt.savefig(str(game)[:-2]+'.jpg')
     plt.show()
+
 
 def get_game(name):
     if name == "biased_rps":
