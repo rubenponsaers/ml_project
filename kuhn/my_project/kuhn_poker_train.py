@@ -2,9 +2,9 @@ from absl import app
 
 import pyspiel
 import tensorflow.compat.v1 as tf
-import my_project.exploit_nash as exploit_nash
-import my_project.extract_policy as extract_policy
-import my_project.evaluation_opponents as evaluation_opponents
+import exploit_nash as exploit_nash
+import extract_policy as extract_policy
+import evaluation_opponents as evaluation_opponents
 
 from open_spiel.python import rl_environment
 from open_spiel.python.algorithms import tabular_qlearner
@@ -53,12 +53,14 @@ def train_agents(env, game, alg, agents, num_actions, num_episodes, step_size, n
 			print("Training progress: "+str(i)+"/"+str(num_episodes))
 			# Get current policy
 			pol = extract_policy.ExtractPolicy(env,agents)
+			#print(pol.to_tabular())
 
 			# Exploitability
-			# expl = exploit_nash.exploitability(game, pol)
+			expl = exploit_nash.exploitability(game, pol)
+			print(expl)
 
 			# NashConv
-			# nash = exploit_nash.nash_conv(game,pol)
+			nash = exploit_nash.nash_conv(game,pol)
 
 			# Evaluation against random
 			(avg_u, avg_w) = evaluation_opponents.evaluate_against_random(env,agents[0],0,alg,num_actions,num_eval)

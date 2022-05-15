@@ -1,0 +1,12 @@
+deep_cfr:
+  game: kuhn_poker
+  num_players: 2
+  policy_network_layers: !!python/tuple [8, 4]
+  advantage_network_layers: !!python/tuple [4, 2]
+  num_iterations: 2
+  num_traversals: 2
+  learning_rate: 0.001
+  num_steps: 50
+  checkpoint_dir: /tmp/deep_cfr
+  save_every: 10
+  eval_every: 10
