@@ -71,37 +71,6 @@ def play_game(game, agent1, agent2):
         time_step = env.step([agent1_output.action, agent2_output.action])
 
         print(time_step.rewards)
-
-def plot_dynamics_regular(game, actions, singlePopulation = False):
-    fig = plt.figure(figsize=[25, 10])
-    payoff_tensor = utils.game_payoffs_array(game)
-    dyn = dynamics.replicator
-
-    if singlePopulation:
-        labels = ["Probability of choosing " + action for action in actions]
-        dyn = dynamics.SinglePopulationDynamics(payoff_tensor, dyn)
-        ax1 = fig.add_subplot(121, projection='3x3')
-        ax1.quiver(dyn)
-        ax1.set_labels(labels)
-        ax2 = fig.add_subplot(122, projection='3x3')
-        ax2.streamplot(dyn, dt=0.2)
-        ax2.set_labels(labels)
-    else:
-        dyn = dynamics.MultiPopulationDynamics(payoff_tensor, dyn)
-        ax1 = fig.add_subplot(121, projection='2x2')
-        ax1.quiver(dyn)
-        ax1.set( 
-            xlabel="Player1, probability of choosing " + actions[0],
-            ylabel="Player2, probability of choosing " + actions[0]
-            )
-        ax2 = fig.add_subplot(122, projection='2x2')
-        ax2.streamplot(dyn)
-        ax2.set( 
-            xlabel="Player1, probability of choosing " + actions[0],
-            ylabel="Player2, probability of choosing " + actions[0]
-            )
-    plt.savefig(str(game)[:-2]+'.jpg')
-    plt.show()
     
 
 def plot_dynamics(game, actions, alpha = 0.01, temperature = 1.5, singlePopulation = False):
@@ -110,12 +79,15 @@ def plot_dynamics(game, actions, alpha = 0.01, temperature = 1.5, singlePopulati
 
     if singlePopulation:
         labels = ["Probability of choosing " + action for action in actions]
-        dyn = dynamics_self.SinglePopulationDynamics(payoff_tensor, dyn)
+        boltzmann_dyn = dynamics_self.SinglePopulationDynamics(payoff_tensor, dynamics_self.boltzmannq_self)
         ax1 = fig.add_subplot(121, projection='3x3')
-        ax1.quiver(dyn)
+        ax1.quiver(boltzmann_dyn)
+        ax1.streamplot(boltzmann_dyn)
         ax1.set_labels(labels)
+        replicator_dyn = dynamics.SinglePopulationDynamics(payoff_tensor, dynamics.replicator)
         ax2 = fig.add_subplot(122, projection='3x3')
-        ax2.streamplot(dyn, dt=0.2)
+        ax2.quiver(replicator_dyn)
+        ax2.streamplot(replicator_dyn)
         ax2.set_labels(labels)
     else:
         boltzmann_dyn = dynamics_self.MultiPopulationDynamics(payoff_tensor, dynamics_self.boltzmannq_self)

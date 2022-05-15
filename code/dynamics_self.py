@@ -17,6 +17,7 @@
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
+from open_spiel.python.egt import dynamics
 
 import numpy as np
 
@@ -41,7 +42,7 @@ def replicator(state, fitness):
   return state * (fitness - avg_fitness)
 
 
-def boltzmannq_self(state, fitness, other_state, temperature=0.72877, alpha=0.1, kappa=5):
+def boltzmannq_self(state, fitness, other_state, temperature, alpha, kappa):
   """Selection-mutation dynamics modeling Q-learning with Boltzmann exploration.
 
   For more details, see equation (10) page 15 in
@@ -57,7 +58,6 @@ def boltzmannq_self(state, fitness, other_state, temperature=0.72877, alpha=0.1,
   """
   u = _boltzmann_utility_vector(other_state, fitness, kappa)
   exploitation = (1. / temperature) * replicator(state, u)
-  #exploitation = np.divide(state, temperature)*(u - state.dot(u))
   exploration = (np.log(state) - state.dot(np.log(state).transpose()))
   res = alpha * (exploitation-state*exploration)
   return res
@@ -120,7 +120,7 @@ class SinglePopulationDynamics(object):
     self.payoff_matrix = payoff_matrix[0]
     self.dynamics = dynamics
 
-  def __call__(self, state=None, time=None):
+  def __call__(self, state=None, time=None, temperature = 0.01, alpha = 0.05, kappa = 5):
     """Time derivative of the population state.
 
     Args:
@@ -140,7 +140,7 @@ class SinglePopulationDynamics(object):
     assert state.shape[0] == self.payoff_matrix.shape[0]
     # (Ax')' = xA'
     fitness = np.matmul(state, self.payoff_matrix.T)
-    return self.dynamics(state, fitness, self.payoff_matrix)
+    return self.dynamics(state, self.payoff_matrix, state, temperature, alpha, kappa)
 
 
 class MultiPopulationDynamics(object):
@@ -165,7 +165,7 @@ class MultiPopulationDynamics(object):
     self.payoff_tensor = payoff_tensor
     self.dynamics = dynamics
 
-  def __call__(self, state, time=None):
+  def __call__(self, state, time=None, temperature = 1.5, alpha = 0.05, kappa = 5):
     """Time derivative of the population states.
 
     Args:
@@ -193,7 +193,7 @@ class MultiPopulationDynamics(object):
       # marginalize out all other populations
       #for i_ in set(range(n)) - {i}:
         #fitness = np.tensordot(states[i_], fitness, axes=[0, 1])
-      dstates[i] = self.dynamics[i](states[i], fitness, states[1-i])
+      dstates[i] = self.dynamics[i](states[i], fitness, states[1-i], temperature, alpha, kappa)
 
     return np.concatenate(dstates)
 
