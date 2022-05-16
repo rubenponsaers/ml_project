@@ -2,11 +2,16 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+from absl import app
+
+
 import yaml
 
 from open_spiel.python import policy, rl_environment
 from open_spiel.python.algorithms import deep_cfr_tf2, exploitability, dqn, random_agent
 from open_spiel.python.algorithms import tabular_qlearner
+from open_spiel.python.policy import TabularPolicy, tabular_policy_from_callable
+
 import extract_policy
 import tensorflow as tf
 import pyspiel
@@ -97,10 +102,11 @@ def qlearning_model():
 	]
 	for step in range(config["num_steps"]):
 		pol = extract_policy.ExtractPolicy(env, agents)
-		print(pol.actions_probabilities())
-		#pol = policy.tabular_policy_from_callable(game, agents.action_probabilities)
-		if (step+1)%config["save_every"]:
-			_policy_to_csv(game, pol, config['checkpoint_dir'])
+		# Evaluate qlearning model
+		if (step+1)%config["save_every"]==0:
+			print("Training progress: "+str(step)+"/"+str(config["num_steps"]))
+			qlearning_policy_to_csv(game, pol, config['checkpoint_dir'],step)
+		# Train qlearning model
 		time_step = env.reset()
 		while not time_step.last():
 			player_id = time_step.observations["current_player"]
@@ -173,6 +179,14 @@ def _policy_to_csv(game, policy, filename):
 			index=[s.history_str() for s in policy.states])
 	df.to_csv(filename)
 
+def qlearning_policy_to_csv(game, policy, filename,step):
+	tabular_policy = tabular_policy_from_callable(game, policy)
+	df = pd.DataFrame(
+			data=tabular_policy.action_probability_array,
+			index=[s.history_str() for s in tabular_policy.states])
+	df.to_csv(filename+"/policy_"+str(step)+".csv")
+	print("Policy written to: "+filename+"/policy_"+str(step)+".csv")
+
 def _eval_against_random_bots(env, trained_agents, random_agents, num_episodes):
 	"""Evaluates `trained_agents` against `random_agents` for `num_episodes`."""
 	num_players = len(trained_agents)
@@ -198,3 +212,11 @@ def _eval_against_random_bots(env, trained_agents, random_agents, num_episodes):
 			episode_rewards += time_step.rewards[player_pos]
 		sum_episode_rewards[player_pos] += episode_rewards
 	return sum_episode_rewards / num_episodes
+
+
+def main(_):
+	qlearning_model()
+
+
+if __name__ == "__main__":
+	app.run(main)
