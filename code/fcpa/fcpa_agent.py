@@ -13,6 +13,7 @@ import logging
 import numpy as np
 import pyspiel
 from open_spiel.python.algorithms import evaluate_bots
+from open_spiel.python.bots import human
 
 
 logger = logging.getLogger('be.kuleuven.cs.dtai.fcpa')
@@ -25,7 +26,8 @@ def get_agent_for_tournament(player_id):
     :param player_id: The integer id of the player for this bot, e.g. `0` if
         acting as the first player.
     """
-    my_player = Agent(player_id)
+    #my_player = Agent(player_id)
+    my_player = human.HumanBot()
     return my_player
 
 
@@ -38,6 +40,7 @@ class Agent(pyspiel.Bot):
         the tournament. Initializing the agent should thus take no more than
         a few seconds.
         """
+
         pyspiel.Bot.__init__(self)
         self.player_id = player_id
 
