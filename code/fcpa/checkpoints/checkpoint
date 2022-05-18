@@ -1,0 +1,2 @@
+model_checkpoint_path: "fcpa_deep_cfr_tf2"
+all_model_checkpoint_paths: "fcpa_deep_cfr_tf2"
