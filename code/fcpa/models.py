@@ -1,24 +1,37 @@
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
+from random import random
+
+from absl import app
+from absl import flags
+from absl import logging
+
 #import yaml
-import pyspiel
-from open_spiel.python.algorithms import cfr, deep_cfr_tf2
+from open_spiel.python.algorithms import deep_cfr_tf2
 #import deep_cfr_tf2, deep_cfr
 #from deep_cfr_tf2 import PolicyNetwork
 from open_spiel.python.bots import uniform_random
 from open_spiel.python.bots import policy as policy_bot
 from open_spiel.python import policy, rl_environment
-from open_spiel.python.algorithms import evaluate_bots, dqn, random_agent
-import custom_agents
+from open_spiel.python.algorithms import evaluate_bots
+from open_spiel.python.bots import uniform_random
+import custom_bots
+import pyspiel
+import matplotlib.pyplot as plt
+import seaborn as sns
+sns.set()
 
 import numpy as np
 #import pandas as pd
 import fcpa_agent
 #import tensorflow.compat.v1 as tf1
-import tensorflow as tf
-tf.compat.v1.enable_eager_execution()
+#import tensorflow as tf
+#tf.compat.v1.enable_eager_execution()
 
 
-import os
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3' 
+#import os
+#os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3' 
 
 
 def get_game(name):
@@ -114,20 +127,38 @@ def deep_cfr_model_tf2():
   num_actions = env.action_spec()["num_actions"]
   print("Training a Deep CFR Model with following configuration:")
 
-  random_agents = [
-    random_agent.RandomAgent(player_id=idx, num_actions=num_actions)
+  rng = np.random.RandomState()
+
+  random_bots = [
+    uniform_random.UniformRandomBot(idx, rng)
     for idx in range(2)
   ]
 
-  fold_agents = [
-    custom_agents.FoldAgent(player_id=idx, num_actions=num_actions) 
+  fold_bots = [
+    custom_bots.AlwaysFoldBot(idx, rng) 
     for idx in range(2)
   ]
 
-  fiftyfifty_agents = [
-    custom_agents.FiftyFiftyAgent(player_id=idx, num_actions=num_actions) 
+  fiftyfifty_bots = [
+    custom_bots.FiftyFiftyBot(idx, rng) 
     for idx in range(2)
   ]
+
+  probs_bots = [
+    custom_bots.ProbsBot(idx, rng)
+    for idx in range(2)
+  ]
+
+  us_random = []
+  us_fold = []
+  us_fiftyfifty = []
+  us_probs = []
+  us_avg = []
+  u_random = []
+  u_fold = []
+  u_fiftyfifty = []
+  u_probs = []
+  u_avg = []
   '''
   deep_cfr_solver = deep_cfr_tf2.DeepCFRSolver(
     game,
@@ -148,7 +179,7 @@ def deep_cfr_model_tf2():
     game,
     policy_network_layers = (32,16),
     advantage_network_layers = (16,8),
-    num_iterations = 2,
+    num_iterations = 10,
     num_traversals = 2,
     batch_size_advantage=2048,
     batch_size_strategy=2048,
@@ -163,18 +194,35 @@ def deep_cfr_model_tf2():
     if step%1 == 0:
       policy_model.save_weights("./checkpoints/fcpa_deep_cfr_tf2.h5")
       #deep_cfr_solver.save_policy_network("/tmp/deep_cfr_test/")
-    if step%1 == 0:
       agents = [
-        fcpa_agent.Agent(player_id=idx) 
+        fcpa_agent.get_agent_for_tournament(idx) 
         for idx in range(2)
       ]
-      r_mean_random = eval_against_bots(env, [deep_cfr_solver], random_agents, 1000)
-      r_mean_fold = eval_against_bots(env, agents, fold_agents, 1000)
-      r_mean_fiftyfifty = eval_against_bots(env, agents, fiftyfifty_agents, 1000)
-      print("[{}] Mean episode rewards against random {}".format(step + 1, r_mean_random))
-      print("[{}] Mean episode rewards against always fold {}".format(step + 1, r_mean_fold))
-      print("[{}] Mean episode rewards against 50/50 fold call {}".format(step + 1, r_mean_fiftyfifty))
-      #print('Deep CFR in FCPA Poker 2p. Utility against random agent: {} after {} steps'.format(utility_against_random, step))
+      u_random.append(eval_against_bots(game, agents, random_bots, 500))
+      u_fold.append(eval_against_bots(game, agents, fold_bots, 500))
+      u_fiftyfifty.append(eval_against_bots(game, agents, fiftyfifty_bots, 500))
+      u_probs.append(eval_against_bots(game, agents, probs_bots, 500))
+      print("[{}] Mean episode rewards against random {}".format(step + 1, u_random[-1]))
+      print("[{}] Mean episode rewards against always fold {}".format(step + 1, u_fold[-1]))
+      print("[{}] Mean episode rewards against 50 50 fold call {}".format(step + 1, u_fiftyfifty[-1]))
+      print("[{}] Mean episode rewards against 10 50 35 5 fold call bet all-in {}".format(step + 1, u_probs[-1]))
+
+    if step%5 == 0:
+      us_random.append(sum(u_random)/len(u_random))
+      u_random.clear()
+      us_fold.append(sum(u_fold)/len(u_fold))
+      u_fold.clear()
+      us_fiftyfifty.append(sum(u_fiftyfifty)/len(u_fiftyfifty))
+      u_fiftyfifty.clear()
+      us_probs.append(sum(u_probs)/len(u_probs))
+      u_probs.clear()
+      us_avg.append((us_random[-1]+us_fold[-1]+us_fiftyfifty[-1]+us_probs[-1])/4)
+      plt.plot(us_random)
+      plt.plot(us_fold)
+      plt.plot(us_fiftyfifty)
+      plt.plot(us_avg)
+      plt.savefig("deepcfr_training.png")
+    
   return deep_cfr_solver
 '''
 def dqn_model():
@@ -247,6 +295,21 @@ def dqn_model():
         agent.step(time_step)
 '''
 
+
+def eval_against_bots(game, agents, bots, num_iters):
+  tot_u = 0
+  match = [agents[0], bots[1]]
+  idx_agent = 0
+  for i in range(num_iters):
+    if i == int(num_iters/2):
+      match = [bots[0], agents[1]]
+      idx_agent = 1
+    us = evaluate_bots.evaluate_bots(game.new_initial_state(), match, np.random)
+    tot_u += us[idx_agent]
+  return (tot_u/num_iters)
+
+
+'''
 def eval_against_bots(env, trained_agents, bots, num_episodes):
   """Evaluates `trained_agents` against `random_agents` for `num_episodes`."""
   num_players = len(trained_agents)
@@ -263,7 +326,7 @@ def eval_against_bots(env, trained_agents, bots, num_episodes):
         player_id = time_step.observations["current_player"]
         if env.is_turn_based:
           agent_output = cur_agents[player_id].step(
-              time_step, is_evaluation=True)
+              time_step)
           action_list = [agent_output.action]
         else:
           agents_output = [
@@ -274,7 +337,7 @@ def eval_against_bots(env, trained_agents, bots, num_episodes):
         episode_rewards += time_step.rewards[player_pos]
       sum_episode_rewards[player_pos] += episode_rewards
   return sum_episode_rewards / num_episodes
-
+'''
 
 def evaluate_policy_against_random(game, policy, num_evals):
   """Source: open_spiel.python.algorithms.evaluate_bots.py"""

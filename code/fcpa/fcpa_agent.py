@@ -55,8 +55,7 @@ class Agent(pyspiel.Bot):
         num_actions = game.num_distinct_actions()
         model = deep_cfr_tf2.PolicyNetwork(input_size, policy_network_layers, num_actions)
         model((tf.random.uniform(shape=(1, input_size)), tf.random.uniform(shape=(num_actions,))), training=False)
-        model.load_weights("./checkpoints/fcpa_deep_cfr_tf299.h5")
-        print(type(model))
+        model.load_weights("./checkpoints/fcpa_deep_cfr_tf2.h5")
         self.state = game.new_initial_state()
         
         
@@ -68,13 +67,11 @@ class Agent(pyspiel.Bot):
         self.player_id = player_id
         #self.policy = deep_cfr_tf2.PolicyNetwork(model)
         self.policy = model
-        print("loaded model")
 
     def restart_at(self, state):
         """Starting a new game in the given state.
         :param state: The initial state of the game.
         """
-        print("restart")
         self.state = state
         
 
@@ -84,7 +81,6 @@ class Agent(pyspiel.Bot):
         :param player_id: The ID of the player that executed an action.
         :param action: The action which the player executed.
         """
-        print("inform")
         self.state = state
         
     
@@ -108,15 +104,12 @@ class Agent(pyspiel.Bot):
             `pyspiel.INVALID_ACTION` if there are no legal actions available.
         """
         action_probs = self._action_probabilities(state)
-        print(action_probs)
         probs = list(action_probs.values())
         probs /= sum(probs)
         actions = list(action_probs.keys())
-        print(actions)
         best_action = np.random.choice(actions, p=probs)
-        print(best_action)
         return best_action
-        
+
         '''
         print("step")
         #print(dir(self.policy))
