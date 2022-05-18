@@ -1,0 +1,59 @@
+cfr:
+  game: fcpa
+  num_players: 2
+  policy_network_layers: !!python/tuple [16, 8]
+  advantage_network_layers: !!python/tuple [8, 4]
+  num_iterations: 100
+  num_traversals: 20
+  learning_rate: 0.001
+  num_steps: 5
+  checkpoint_dir: /tmp/fcpa_deep_cfr_tf1
+  save_every: 1
+  eval_every: 1
+
+deep_cfr_tf2:
+  game: fcpa
+  num_players: 2
+  policy_network_layers: !!python/tuple [32, 16]
+  advantage_network_layers: !!python/tuple [16, 8]
+  num_iterations: 10
+  num_traversals: 2
+  batch_size_advantage: 2048
+  batch_size_strategy: 2048
+  memory_capacity: 1000000
+  learning_rate: 0.001
+  policy_network_train_steps: 500
+  advantage_network_train_steps: 50
+  reinitialize_advantage_networks: true
+  num_steps: 100
+  checkpoint_dir: ./checkpoints/fcpa_deep_cfr_tf2
+  save_every: 1
+  eval_every: 1
+
+deep_cfr:
+  game: fcpa
+  num_players: 2
+  policy_network_layers: !!python/tuple [32, 16]
+  advantage_network_layers: !!python/tuple [16, 8]
+  num_iterations: 50
+  num_traversals: 10
+  learning_rate: 0.001
+  num_steps: 50
+  checkpoint_dir: /tmp/fcpa_deep_cfr_tf1
+  save_every: 5
+  eval_every: 5
+  memory_capacity: 1000000
+
+dqn:
+  game: fcpa
+  num_players: 2
+  hidden_layers_sizes: [64, 64, 64]
+  replay_buffer_capacity: 100000
+  batch_size: 32
+  num_steps: 10000
+  learning_rate: 0.01
+  #epsilon_start: 1.0
+  #epsilon_end: 0.2
+  checkpoint_dir: ./checkpoints/fcpa_dqn
+  save_every: 100
+  eval_every: 100
